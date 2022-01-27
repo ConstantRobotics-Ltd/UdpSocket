@@ -15,7 +15,7 @@ project(UpdSocket LANGUAGES CXX)
 ## basic 3rd-party settings before use
 ###############################################################################
 # To inherit the top-level architecture when the project is used as a submodule.
-SET(PARENT ${PARENT}_COMMUNICATION_)
+SET(PARENT ${PARENT}_COMMUNICATION)
 # Disable self-overwriting of parameters inside included subdirectories.
 SET(${PARENT}_SUBMODULE_CACHE_OVERWRITE OFF CACHE BOOL "" FORCE)
 
@@ -26,6 +26,7 @@ SET(${PARENT}_SUBMODULE_CACHE_OVERWRITE OFF CACHE BOOL "" FORCE)
 ## 3rd-party submodules configuration
 ###############################################################################
 SET(${PARENT}_UDP_SOCKET                                ON CACHE BOOL "" FORCE)
+SET(${PARENT}_UDP_SOCKET_TESTS                          ON CACHE BOOL "" FORCE)
 
 
 
@@ -35,5 +36,9 @@ SET(${PARENT}_UDP_SOCKET                                ON CACHE BOOL "" FORCE)
 ###############################################################################
 if (${PARENT}_UDP_SOCKET)
     add_subdirectory(UdpSocket)
+endif()
+
+if (${PARENT}_UDP_SOCKET_TESTS)
+    add_subdirectory(Tests)
 endif()
 
