@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string.h>
 #include "UdpSocket.h"
 #include "UdpSocketVersion.h"
 
@@ -111,7 +112,7 @@ bool cr::clib::UdpSocket::open(uint16_t port, bool isServer, uint32_t timeoutMs)
     timeval timeparams;
     timeparams.tv_sec = timeoutMs / 1000;
     // Timeout in microseconds for read data from socket.
-    timeparams.tv_usec = timeoutMs * 1000;
+    timeparams.tv_usec = timeoutMs % 1000;
     if (timeoutMs != 0) {
         retVal = setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO,
                             (const char*)&timeparams, sizeof(timeval));

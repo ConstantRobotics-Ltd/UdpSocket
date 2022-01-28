@@ -57,7 +57,7 @@ int main(void)
             outputData[i] = (uint8_t)(rand() % 255);
 
         // Send data.
-        std::cout << udpSocket.sendData(outputData, numBytesToSend) << "bytes sent" << std::endl;
+        std::cout << udpSocket.sendData(outputData, numBytesToSend) << " bytes sent" << std::endl;
 
         // Wait according to parameters.
         int waitTime = (int)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime).count();
