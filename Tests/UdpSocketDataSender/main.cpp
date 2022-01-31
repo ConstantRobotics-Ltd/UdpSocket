@@ -32,13 +32,13 @@ int main(void)
 
     // Init UDP socket.
     cr::clib::UdpSocket udpSocket;
-    if (!udpSocket.setDstIp(dstIp))
+    if (!udpSocket.setDstAddr(dstIp, udpPort))
     {
         std::cout << "ERROR: Destination IP not set. Exit." << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
         return -1;
     }
-    if (!udpSocket.open(udpPort, false))
+    if (!udpSocket.open(false))
     {
         std::cout << "ERROR: Udp socket not init. Exit." << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));

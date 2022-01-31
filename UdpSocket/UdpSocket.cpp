@@ -1,5 +1,3 @@
-#include <iostream>
-#include <string.h>
 #include "UdpSocket.h"
 #include "UdpSocketVersion.h"
 
@@ -18,22 +16,12 @@ std::string cr::clib::UdpSocket::getVersion()
 // Class constructor.
 cr::clib::UdpSocket::UdpSocket() :
     m_isOpen(false),
-    m_udpPort(0),
     m_sock(0)
 {
     // Reset host address structure.
     memset(&m_hostAddr, 0, sizeof(sockaddr_in));
-    m_hostAddr.sin_family = AF_INET;
-    std::string hostIp = "127.0.0.1";
-    inet_pton(AF_INET, hostIp.c_str(), &m_hostAddr.sin_addr);
-    m_hostAddr.sin_port = htons(m_udpPort);
-
     // Reset destination address structure.
     memset(&m_dstAddr, 0, sizeof(sockaddr_in));
-    m_dstAddr.sin_family = AF_INET;
-    std::string dstIp = "127.0.0.1";
-    inet_pton(AF_INET, dstIp.c_str(), &m_dstAddr.sin_addr);
-    m_dstAddr.sin_port = htons(m_udpPort);
 }
 
 
@@ -47,17 +35,10 @@ cr::clib::UdpSocket::~UdpSocket()
 
 
 // Method to open socket.
-bool cr::clib::UdpSocket::open(uint16_t port, bool isServer, uint32_t timeoutMs)
+bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
 {
     // Init variables.
     int retVal = 0;
-
-    // Init port.
-    if (port == 0)
-        return false;
-    m_udpPort = port;
-    m_hostAddr.sin_port = htons(m_udpPort);
-    m_dstAddr.sin_port = htons(m_udpPort);
 
     // Init params in Windows OS.
 #if defined(linux) || defined(__linux) || defined(__linux__)
@@ -113,11 +94,13 @@ bool cr::clib::UdpSocket::open(uint16_t port, bool isServer, uint32_t timeoutMs)
     timeparams.tv_sec = timeoutMs / 1000;
     // Timeout in microseconds for read data from socket.
     timeparams.tv_usec = (timeoutMs % 1000) * 1000;
-    if (timeoutMs != 0) {
+    if (timeoutMs != 0)
+    {
         retVal = setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO,
                             (const char*)&timeparams, sizeof(timeval));
         // Close socket in case error
-        if (retVal < 0) {
+        if (retVal < 0)
+        {
             ::close(m_sock);
 #else
     // Init timeouts
@@ -162,13 +145,13 @@ bool cr::clib::UdpSocket::open(uint16_t port, bool isServer, uint32_t timeoutMs)
 
 
 
-// Method to set host IP.
-bool cr::clib::UdpSocket::setHostIp(std::string hostIp)
+// Method to set host address.
+bool cr::clib::UdpSocket::setHostAddr(std::string hostIp, uint16_t port)
 {
     m_hostAddr.sin_family = AF_INET;
     if (!inet_pton(AF_INET, hostIp.c_str(), &m_hostAddr.sin_addr))
         return false;
-    m_hostAddr.sin_port = htons(m_udpPort);
+    m_hostAddr.sin_port = htons(port);
 
     return true;
 }
@@ -176,34 +159,32 @@ bool cr::clib::UdpSocket::setHostIp(std::string hostIp)
 
 
 // Method to set host IP.
-bool cr::clib::UdpSocket::setHostIp(sockaddr_in hostAddr)
+bool cr::clib::UdpSocket::setHostAddr(sockaddr_in hostAddr)
 {
     memcpy(&m_hostAddr, &hostAddr, sizeof(sockaddr_in));
-    m_hostAddr.sin_port = htons(m_udpPort);
 
     return true;
 }
 
 
 
-// Method to set destination IP.
-bool cr::clib::UdpSocket::setDstIp(std::string dstIp)
+// Method to set destination address.
+bool cr::clib::UdpSocket::setDstAddr(std::string dstIp, uint16_t port)
 {
     m_dstAddr.sin_family = AF_INET;
     if (!inet_pton(AF_INET, dstIp.c_str(), &m_dstAddr.sin_addr))
         return false;
-    m_dstAddr.sin_port = htons(m_udpPort);
+    m_dstAddr.sin_port = htons(port);
 
     return true;
 }
 
 
 
-// Method to set destination IP.
-bool cr::clib::UdpSocket::setDstIp(sockaddr_in dstAddr)
+// Method to set destination address.
+bool cr::clib::UdpSocket::setDstAddr(sockaddr_in dstAddr)
 {
     memcpy(&m_dstAddr, &dstAddr, sizeof(sockaddr_in));
-    dstAddr.sin_port = htons(m_udpPort);
 
     return true;
 }

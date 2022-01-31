@@ -15,7 +15,7 @@ project(UpdSocket LANGUAGES CXX)
 ## basic 3rd-party settings before use
 ###############################################################################
 # To inherit the top-level architecture when the project is used as a submodule.
-SET(PARENT ${PARENT}_COMMUNICATION)
+SET(PARENT ${PARENT}_UDP_SOCKET_LIB)
 # Disable self-overwriting of parameters inside included subdirectories.
 SET(${PARENT}_SUBMODULE_CACHE_OVERWRITE OFF CACHE BOOL "" FORCE)
 

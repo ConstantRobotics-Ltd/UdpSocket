@@ -10,7 +10,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #include <WS2tcpip.h>
-#include <windows.h>
 #endif
 #include <string>
 
@@ -44,44 +43,44 @@ namespace clib
 
         /**
          * @brief Open UPD socket.
-         * @param port UDP port.
          * @param isServer Server type - will be able to receive data.
          * @param timeoutMs Timeout ms to wait data when you call read data.
          * @return true If socket is open.
          * @return false If socket not open.
          */
-        bool open(uint16_t port, bool isServer = false, uint32_t timeoutMs = 100);
+        bool open(bool isServer = false, uint32_t timeoutMs = 100);
 
         /**
-         * @brief Set host IP.
+         * @brief Set host address (IP and port).
          * @param hostIp Host IP address.
+         * @param port UDP port.
          * @return true if the address is set.
          * @return false if thre address not set.
          */
-        bool setHostIp(std::string hostIp);
+        bool setHostAddr(std::string hostIp, uint16_t port);
 
         /**
-         * @brief Set host IP. Will be set only IP.
+         * @brief Set host address (IP and port).
          * @param hostAddr Host address structure.
          * @return true if the address set.
          */
-        bool setHostIp(sockaddr_in hostAddr);
+        bool setHostAddr(sockaddr_in hostAddr);
 
         /**
-         * @brief Set destination address.
+         * @brief Set destination address (IP and port).
          * @param dstIp Destination IP.
          * @return true if the address is set.
          * @return false if thre address not set.
          */
-        bool setDstIp(std::string dstIp);
+        bool setDstAddr(std::string dstIp, uint16_t port);
 
         /**
-         * @brief Set destination address. Will be set only IP.
+         * @brief Set destination address (IP and port).
          * @param dstAddr Destination address.
          * @return true if the address is set.
          * @return false if thre address not set.
          */
-        bool setDstIp(sockaddr_in dstAddr);
+        bool setDstAddr(sockaddr_in dstAddr);
 
 		/**
          * @brief Read data.
@@ -115,7 +114,6 @@ namespace clib
 	private:
 
         bool m_isOpen;                  // Open flag.
-        uint16_t m_udpPort;             // Socket port number.
         struct sockaddr_in m_hostAddr;  // Host net address structure.
         struct sockaddr_in m_dstAddr;   // Destination net address structure.
 #if defined(linux) || defined(__linux) || defined(__linux__)

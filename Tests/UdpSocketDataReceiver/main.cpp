@@ -25,7 +25,13 @@ int main(void)
 
     // Init UDP socket.
     cr::clib::UdpSocket udpSocket;
-    if (!udpSocket.open(udpPort, true, waitDataTimeoutMs))
+    if (!udpSocket.setHostAddr("127.0.0.1", udpPort))
+    {
+        std::cout << "ERROR: Host IP not set. Exit." << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        return -1;
+    }
+    if (!udpSocket.open(true, waitDataTimeoutMs))
     {
         std::cout << "ERROR: Udp socket not init. Exit." << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
