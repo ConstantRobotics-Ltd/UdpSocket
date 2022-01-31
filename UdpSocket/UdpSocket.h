@@ -107,7 +107,7 @@ namespace clib
 		bool isOpen(); 
 
 		/**
-         * @brief close - Methos to close UDP socket.
+         * @brief Close UDP socket.
 		 */
         void close();
 
@@ -122,7 +122,6 @@ namespace clib
         SOCKET m_sock;                  // Socket.
 #endif
 	};
-
 }
 }
 
