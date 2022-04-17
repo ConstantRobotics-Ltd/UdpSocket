@@ -193,6 +193,9 @@ void close();
 The server socket type is created as follows:
 
 ```cpp
+#include "UdpSocket.h"
+using namespace cr::clib;
+
 int main(void)
 {
     UdpSocket server(UdpSocket::SERVER);
@@ -249,6 +252,9 @@ int main(void)
 The client socket type is created as follows:
 
 ```cpp
+#include "UdpSocket.h"
+using namespace cr::clib;
+
 int main(void)
 {
     UdpSocket client(UdpSocket::CLIENT);
