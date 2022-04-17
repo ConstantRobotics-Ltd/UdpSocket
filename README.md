@@ -2,9 +2,18 @@
 - [OVERVIEW](#overview)
 - [API DESCRIPTION](#api-description)
   - [getVersion(..)](#getversion)
-  - [createTracer(..)](#createtracer)
-  - [print(..)](#print)
+  - [UdpSocket(..)](#udpsocket)
+  - [setDstAddr(..)](#setdstaddr)
+  - [setHostAddr(..)](#sethostaddr)
+  - [open(..)](#open)
+  - [readData(..)](#readdata)
+  - [sendData(..)](#senddata)
+  - [isOpen(..)](#isopen)
+  - [close(..)](#close)
 - [USAGE EXAMPLE](#usage-example)
+  - [Server Socket](#server-socket-type)
+  - [Client Socket](#client-socket-type)
+  
 
 ## OVERVIEW
 
