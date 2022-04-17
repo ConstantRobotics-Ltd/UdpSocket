@@ -1,44 +1,68 @@
 #include "UdpSocket.h"
+#include <iostream>
+#include <string>
+#include "Tracer.h"
+
 #include "UdpSocketVersion.h"
 
+using namespace cr::clib;
+using namespace cr::utils;
 
+static std::shared_ptr<Tracer>
+g_tracer = Tracer::createTracer(WARNING, "UdpSocket");
 
-// Method to get class version.
-std::string cr::clib::UdpSocket::getVersion()
+std::string UdpSocket::getVersion()
 {
-    return std::to_string(UDP_SOCKET_MAJOR_VERSION) + "." +
-           std::to_string(UDP_SOCKET_MINOR_VERSION) + "." +
-           std::to_string(UDP_SOCKET_PATCH_VERSION);
+    return UDP_SOCKET_VERSION;
 }
 
 
-
-// Class constructor.
-cr::clib::UdpSocket::UdpSocket() :
+UdpSocket::UdpSocket(SocketType type) :
+    m_socketType(type),
+    m_isHostAddrSet(false),
+    m_isDstAddrSet(false),
     m_isOpen(false),
+    m_udpPortNum(0),
     m_sock(0)
 {
-    // Reset host address structure.
     memset(&m_hostAddr, 0, sizeof(sockaddr_in));
-    // Reset destination address structure.
     memset(&m_dstAddr, 0, sizeof(sockaddr_in));
 }
 
 
-
-// Class destructor.
-cr::clib::UdpSocket::~UdpSocket()
+UdpSocket::~UdpSocket()
 {
     close();
 }
 
 
-
-// Method to open socket.
-bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
+bool UdpSocket::open(uint16_t timeoutMs)
 {
-    // Init variables.
-    int retVal = 0;
+
+    int retVal;
+
+
+    if (m_socketType == SERVER && !m_isHostAddrSet)
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s\n", "Host IP Addr or Port is not setup");
+        return false;
+    }
+
+    if (m_socketType == CLIENT && !m_isDstAddrSet)
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s\n", "Dst IP Addr or Port is not setup");
+        return false;
+    }
+
+    // Check if socket already open.
+    if (m_isOpen)
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s\n", "Socket already open");
+        return false;
+    }
 
     // Init params in Windows OS.
 #if defined(linux) || defined(__linux) || defined(__linux__)
@@ -46,7 +70,11 @@ bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
     WSADATA wsaData;
     int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0)
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s%d\n", "WSAStartup failed: ", iResult);
         return false;
+    }
 #endif
 
     // Init socket.
@@ -60,12 +88,13 @@ bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
     {
         WSACleanup();
 #endif
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s\n", "Socket creation failed");
         return false;
     }
 
     // Bing socket if server type.
-    if (isServer)
-    {
+    if (m_socketType == SERVER) {
 #if defined(linux) || defined(__linux) || defined(__linux__)
         retVal = ::bind(m_sock, (struct sockaddr*)&m_hostAddr,sizeof(m_hostAddr));
 #else
@@ -74,8 +103,7 @@ bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
 #if defined(linux) || defined(__linux) || defined(__linux__)
         if (retVal < 0) {
 #else
-        if (retVal == SOCKET_ERROR)
-        {
+        if (retVal == SOCKET_ERROR) {
 #endif
             // Close socket in case fail bind.
 #if defined(linux) || defined(__linux) || defined(__linux__)
@@ -84,6 +112,8 @@ bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
             closesocket(m_sock);
             WSACleanup();
 #endif
+            TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+                  "%s\n", "Socket bind exception");
             return false;
         }
     }
@@ -93,14 +123,12 @@ bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
     timeval timeparams;
     timeparams.tv_sec = timeoutMs / 1000;
     // Timeout in microseconds for read data from socket.
-    timeparams.tv_usec = (timeoutMs % 1000) * 1000;
-    if (timeoutMs != 0)
-    {
+    timeparams.tv_usec = timeoutMs * 1000;
+    if (timeoutMs != 0) {
         retVal = setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO,
                             (const char*)&timeparams, sizeof(timeval));
         // Close socket in case error
-        if (retVal < 0)
-        {
+        if (retVal < 0) {
             ::close(m_sock);
 #else
     // Init timeouts
@@ -114,6 +142,8 @@ bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
             closesocket(m_sock);
             WSACleanup();
 #endif
+            TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+                  "%s\n", "Socket set timeout exception");
             return false;
         }
     }
@@ -134,6 +164,8 @@ bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
         closesocket(m_sock);
         WSACleanup();
 #endif
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s\n", "Socket set broadcast exception");
         return false;
     }
 
@@ -144,59 +176,81 @@ bool cr::clib::UdpSocket::open(bool isServer, uint32_t timeoutMs)
 }
 
 
-
-// Method to set host address.
-bool cr::clib::UdpSocket::setHostAddr(std::string hostIp, uint16_t port)
-{
-    m_hostAddr.sin_family = AF_INET;
-    if (!inet_pton(AF_INET, hostIp.c_str(), &m_hostAddr.sin_addr))
-        return false;
-    m_hostAddr.sin_port = htons(port);
-
-    return true;
-}
-
-
-
-// Method to set host IP.
-bool cr::clib::UdpSocket::setHostAddr(sockaddr_in hostAddr)
-{
-    memcpy(&m_hostAddr, &hostAddr, sizeof(sockaddr_in));
-
-    return true;
-}
-
-
-
-// Method to set destination address.
-bool cr::clib::UdpSocket::setDstAddr(std::string dstIp, uint16_t port)
+bool UdpSocket::setDstAddr(std::string dstIP, uint16_t dstPort)
 {
     m_dstAddr.sin_family = AF_INET;
-    if (!inet_pton(AF_INET, dstIp.c_str(), &m_dstAddr.sin_addr))
+
+    if (!inet_pton(AF_INET, dstIP.c_str(), &m_dstAddr.sin_addr))
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s%s\n", "Invalid Destination IP Addr: ", dstIP.c_str());
         return false;
-    m_dstAddr.sin_port = htons(port);
+    }
 
-    return true;
+    if (dstPort >= 1 && dstPort <= 65535)
+    {
+        m_dstAddr.sin_port = htons(dstPort);
+    }else
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s%d\n", "Invalid Destination Port: ", dstPort);
+        return false;
+    }
+
+    m_isDstAddrSet = true;
+    return m_isDstAddrSet;
 }
 
 
-
-// Method to set destination address.
-bool cr::clib::UdpSocket::setDstAddr(sockaddr_in dstAddr)
+bool UdpSocket::setDstAddr(sockaddr_in dstAddr)
 {
-    memcpy(&m_dstAddr, &dstAddr, sizeof(sockaddr_in));
+    memcpy(&m_dstAddr, &dstAddr, sizeof (sockaddr_in));
+    m_isDstAddrSet = true;
+    return m_isDstAddrSet;
+}
 
-    return true;
+bool UdpSocket::setHostAddr(std::string hostIP, uint16_t hostPort)
+{
+    m_hostAddr.sin_family = AF_INET;
+
+    if (!inet_pton(AF_INET, hostIP.c_str(), &m_hostAddr.sin_addr))
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s%s\n", "Invalid Host IP Addr: ", hostIP.c_str());
+        return false;
+    }
+
+    if (hostPort >= 1 && hostPort <= 65535)
+    {
+        m_hostAddr.sin_port = htons(hostPort);
+    }else
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s%d\n", "Invalid Host Port: ", hostPort);
+        return false;
+    }
+
+    m_isHostAddrSet = true;
+    return m_isHostAddrSet;
+}
+
+bool UdpSocket::setHostAddr(sockaddr_in hostAddr)
+{
+    memcpy(&m_hostAddr, &hostAddr, sizeof (sockaddr_in));
+    m_isHostAddrSet = true;
+    return m_isHostAddrSet;
 }
 
 
-
-// Method to read data.
-int cr::clib::UdpSocket::readData(uint8_t* buf, uint32_t bufSize, sockaddr_in* srcAddr)
+int UdpSocket::readData(uint8_t* buf, uint32_t bufSize, sockaddr_in* srcAddr)
 {
     // Check if socket not open.
     if (!m_isOpen)
-        return -1;
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s\n", "Socket not open");
+		return -1;
+    }
 
     // Wait and read data from socket.
     sockaddr_in _srcAddr;
@@ -213,7 +267,6 @@ int cr::clib::UdpSocket::readData(uint8_t* buf, uint32_t bufSize, sockaddr_in* s
                    (struct sockaddr*)&_srcAddr, &_srcAddrSize);
 #endif
 
-    // Copu source address structure.
     if (srcAddr != nullptr)
         memcpy(srcAddr, &_srcAddr, _srcAddrSize);
 
@@ -221,14 +274,16 @@ int cr::clib::UdpSocket::readData(uint8_t* buf, uint32_t bufSize, sockaddr_in* s
 }
 
 
-
-// Method to send data.
-int cr::clib::UdpSocket::sendData(uint8_t* data, uint32_t dataSize,
+int UdpSocket::sendData(uint8_t* data, uint32_t dataSize,
                             sockaddr_in* dstAddr)
 {
     // Check if socket not open.
     if (!m_isOpen)
+    {
+        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
+              "%s\n", "Socket not open");
         return -1;
+    }
 
 	// Send data.
     if (dstAddr != nullptr)
@@ -240,9 +295,7 @@ int cr::clib::UdpSocket::sendData(uint8_t* data, uint32_t dataSize,
 }
 
 
-
-// Method to close socket.
-void cr::clib::UdpSocket::close()
+void UdpSocket::close()
 {
 	// Close socket
     if (m_isOpen)
@@ -254,14 +307,13 @@ void cr::clib::UdpSocket::close()
 		WSACleanup();
 #endif
 	}
-
+	// Reset flags.
+    m_udpPortNum = 0;
     m_isOpen = false;
 }
 
 
-
-// Method to get socket status.
-bool cr::clib::UdpSocket::isOpen()
+bool UdpSocket::isOpen()
 {
     return m_isOpen;
 }

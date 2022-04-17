@@ -2,13 +2,24 @@
 #include <chrono>
 #include <ctime>
 #include <thread>
-#include <UdpSocket.h>
+
+#include "Tracer.h"
+#include "UdpSocket.h"
+
+using namespace cr::clib;
+using namespace cr::utils;
 
 // Entry point.
 int main(void)
 {
-    std::cout << "###  UDP socket data sender  ###" << std::endl;
-    std::cout << "###  UdpSocket class v" << cr::clib::UdpSocket::getVersion() << std::endl << std::endl;
+    std::cout<< "=================================================" << std::endl;
+    std::cout<< "UdpSocketDataSender " << UdpSocket::getVersion()   << std::endl;
+    std::cout<< "=================================================" << std::endl;
+    std::cout<< "Library versions: "                                << std::endl;
+    std::cout<< "Tracer:............"<< Tracer::getVersion()        << std::endl;
+    std::cout<< "UdpSocket:........."<< UdpSocket::getVersion()     << std::endl;
+    std::cout<< "-------------------------------------------------" << std::endl;
+    std::cout<< std::endl;
 
     // Enter destination IP.
     std::string dstIp = "";
@@ -17,28 +28,28 @@ int main(void)
 
     // Enter UDP port.
     int udpPort = 0;
-    std::cout << "Enter UDP port: ";
+    std::cout << "Enter destination UDP port: ";
     std::cin >> udpPort;
-
-    // Enter number of bytes.
-    int numBytesToSend = 0;
-    std::cout << "Enter num bytes to send: ";
-    std::cin >> numBytesToSend;
 
     // Enter sending data period ms.
     int cyclePeriodMs = 0;
     std::cout << "Enter sending data period ms: ";
     std::cin >> cyclePeriodMs;
 
+    // Enter number of bytes.
+    int numBytesToSend = 0;
+    std::cout << "Enter num bytes to send [0-1024]: ";
+    std::cin >> numBytesToSend;
+
     // Init UDP socket.
-    cr::clib::UdpSocket udpSocket;
+    UdpSocket udpSocket(UdpSocket::CLIENT);
     if (!udpSocket.setDstAddr(dstIp, udpPort))
     {
         std::cout << "ERROR: Destination IP not set. Exit." << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
         return -1;
     }
-    if (!udpSocket.open(false))
+    if (!udpSocket.open())
     {
         std::cout << "ERROR: Udp socket not init. Exit." << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
