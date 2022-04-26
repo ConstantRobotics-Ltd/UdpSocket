@@ -29,8 +29,8 @@ endif()
 ## CONFIGURATION
 ## 3rd-party submodules configuration
 ################################################################################
-SET(${PARENT}_UDP_SOCKET                                ON  CACHE BOOL "" FORCE)
-SET(${PARENT}_UDP_SOCKET_EXAMPLES                       ON  CACHE BOOL "" FORCE)
+SET(${PARENT}_UDP_SOCKET                      ON CACHE BOOL "" ${REWRITE_FORCE})
+SET(${PARENT}_UDP_SOCKET_EXAMPLES             ON CACHE BOOL "" ${REWRITE_FORCE})
 
 
 
