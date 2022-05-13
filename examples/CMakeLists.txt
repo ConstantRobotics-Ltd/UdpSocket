@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.13)
 ## PROJECT
 ## name and version
 ###############################################################################
-project(Examples LANGUAGES CXX)
+project(examples LANGUAGES CXX)
 
 
 
