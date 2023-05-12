@@ -39,7 +39,6 @@ SET(${PARENT}_UDP_SOCKET_EXAMPLES             ON CACHE BOOL "" ${REWRITE_FORCE})
 ## Adding subdirectories according to the 3rd-party configuration
 ################################################################################
 if (${PARENT}_UDP_SOCKET)
-    add_subdirectory(3rdparty)
     add_subdirectory(src)
 endif()
 if (${PARENT}_UDP_SOCKET_EXAMPLES)
