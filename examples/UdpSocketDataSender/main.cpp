@@ -2,80 +2,68 @@
 #include <chrono>
 #include <ctime>
 #include <thread>
-
-#include "Tracer.h"
 #include "UdpSocket.h"
 
+// Link namespaces.
+using namespace std;
 using namespace cr::clib;
-using namespace cr::utils;
+using namespace std::chrono;
 
 // Entry point.
 int main(void)
 {
-    std::cout<< "=================================================" << std::endl;
-    std::cout<< "UdpSocketDataSender " << UdpSocket::getVersion()   << std::endl;
-    std::cout<< "=================================================" << std::endl;
-    std::cout<< "Library versions: "                                << std::endl;
-    std::cout<< "Tracer:............"<< Tracer::getVersion()        << std::endl;
-    std::cout<< "UdpSocket:........."<< UdpSocket::getVersion()     << std::endl;
-    std::cout<< "-------------------------------------------------" << std::endl;
-    std::cout<< std::endl;
+    cout<< "Data sender v" << UdpSocket::getVersion() << endl << endl;
 
     // Enter destination IP.
-    std::string dstIp = "";
-    std::cout << "Enter destination IP: ";
-    std::cin >> dstIp;
+    string ip = "";
+    cout << "Enter destination IP: ";
+    cin >> ip;
 
     // Enter UDP port.
-    int udpPort = 0;
-    std::cout << "Enter destination UDP port: ";
-    std::cin >> udpPort;
+    int port = 0;
+    cout << "Enter UDP port: ";
+    cin >> port;
 
     // Enter sending data period ms.
-    int cyclePeriodMs = 0;
-    std::cout << "Enter sending data period ms: ";
-    std::cin >> cyclePeriodMs;
+    int cyclePeriodMsec = 0;
+    cout << "Enter sending data period msec: ";
+    cin >> cyclePeriodMsec;
 
     // Enter number of bytes.
-    int numBytesToSend = 0;
-    std::cout << "Enter num bytes to send [0-1024]: ";
-    std::cin >> numBytesToSend;
+    int numBytes = 0;
+    cout << "Enter num bytes to send [0-8192]: ";
+    cin >> numBytes;
 
-    // Init UDP socket.
-    UdpSocket udpSocket(UdpSocket::CLIENT);
-    if (!udpSocket.setDstAddr(dstIp, udpPort))
+    // Init UDP socket: clietn (only to send data), default destination IP.
+    UdpSocket udpSocket;
+    if (!udpSocket.open(port, false, ip))
     {
-        std::cout << "ERROR: Destination IP not set. Exit." << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        return -1;
-    }
-    if (!udpSocket.open())
-    {
-        std::cout << "ERROR: Udp socket not init. Exit." << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        cout << "ERROR: Can't init UDP socket. Exit." << endl;
+        this_thread::sleep_for(seconds(1));
         return -1;
     }
 
     // Init variables.
-    uint8_t* outputData = new uint8_t[numBytesToSend];
+    uint8_t* data = new uint8_t[numBytes];
 
     // Main loop.
-    std::chrono::time_point<std::chrono::system_clock> startTime = std::chrono::system_clock::now();
+    time_point<system_clock> startTime = system_clock::now();
     while (true)
     {
         // Prepare random data.
-        for (int i = 0; i < numBytesToSend; ++i)
-            outputData[i] = (uint8_t)(rand() % 255);
+        for (int i = 0; i < numBytes; ++i)
+            data[i] = (uint8_t)(rand() % 255);
 
         // Send data.
-        std::cout << udpSocket.sendData(outputData, numBytesToSend) << " bytes sent" << std::endl;
+        cout << udpSocket.send(data, numBytes) << " bytes sent" << endl;
 
         // Wait according to parameters.
-        int waitTime = (int)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime).count();
-        waitTime = cyclePeriodMs - waitTime;
+        int waitTime = (int)duration_cast<milliseconds>(system_clock::now() -
+                                                        startTime).count();
+        waitTime = cyclePeriodMsec - waitTime;
         if (waitTime > 0)
-            std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
-        startTime = std::chrono::system_clock::now();
+            this_thread::sleep_for(milliseconds(waitTime));
+        startTime = system_clock::now();
     }
 
     return 1;

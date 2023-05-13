@@ -2,70 +2,58 @@
 #include <chrono>
 #include <ctime>
 #include <thread>
-
-#include "Tracer.h"
 #include "UdpSocket.h"
 
+// Link namespaces.
+using namespace std;
 using namespace cr::clib;
-using namespace cr::utils;
+using namespace std::chrono;
 
 // Entry point.
 int main(void)
 {
-    std::cout<< "=================================================" << std::endl;
-    std::cout<< "UdpSocketDataReceiver " << UdpSocket::getVersion() << std::endl;
-    std::cout<< "=================================================" << std::endl;
-    std::cout<< "Library versions: "                                << std::endl;
-    std::cout<< "Tracer:............"<< Tracer::getVersion()        << std::endl;
-    std::cout<< "UdpSocket:........."<< UdpSocket::getVersion()     << std::endl;
-    std::cout<< "-------------------------------------------------" << std::endl;
-    std::cout<< std::endl;
+    cout<< "Data receiver v" << UdpSocket::getVersion() << endl << endl;
 
-    // Enter host IP.
-    std::string hostIp = "";
-    std::cout << "Enter host IP: ";
-    std::cin >> hostIp;
+    // Set UDP port.
+    int port = 0;
+    cout << "Enter UDP port: ";
+    cin >> port;
 
-    // Enter UDP port.
-    int udpPort = 0;
-    std::cout << "Enter host UDP port: ";
-    std::cin >> udpPort;
+    // Set wait data timeout.
+    int timeoutMsec = 0;
+    cout << "Enter wait data timeout, msec: ";
+    cin >> timeoutMsec;
 
-    // Enter wait data timeout.
-    int waitDataTimeoutMs = 0;
-    std::cout << "Enter wait data timeout ms: ";
-    std::cin >> waitDataTimeoutMs;
-
-    // Init UDP socket.
-    UdpSocket udpSocket(UdpSocket::SERVER);
-    if (!udpSocket.setHostAddr(hostIp, udpPort))
+    // Init UDP socket: server, default destination IP.
+    UdpSocket udpSocket;
+    if (!udpSocket.open(port, true, "127.0.0.1", timeoutMsec))
     {
-        std::cout << "ERROR: Host IP not set. Exit." << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        return -1;
-    }
-    if (!udpSocket.open(waitDataTimeoutMs))
-    {
-        std::cout << "ERROR: Udp socket not init. Exit." << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        cout << "ERROR: Can't init UDP socket. Exit." << endl;
+        this_thread::sleep_for(seconds(1));
         return -1;
     }
 
     // Init variables.
-    const uint16_t inputDataSize = 1024;
-    uint8_t inputData[inputDataSize];
+    const int bufferSize = 1024;
+    uint8_t data[bufferSize];
 
     // Main loop.
     while (true)
     {
-        // Read data.
-        int bytes = udpSocket.readData(inputData, inputDataSize);
+        // Read data. Max wait time = timeoutMsec.
+        struct sockaddr_in addr;
+        int bytes = udpSocket.read(data, bufferSize, &addr);
 
         // Check input data size.
         if (bytes <= 0)
-            std::cout << "No input data" << std::endl;
-        else
-            std::cout << bytes << " bytes read." << std::endl;
+        {
+            cout << "No input data" << endl;
+            continue;
+        }
+
+        // Show data about sender.
+        cout << bytes << " bytes read from " << udpSocket.getIp(&addr) << "/" <<
+                udpSocket.getPort(&addr) << endl;
     }
 }
 

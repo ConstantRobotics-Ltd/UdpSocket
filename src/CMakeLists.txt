@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.13)
 ## LIBRARY-PROJECT
 ## name and version
 ################################################################################
-project(UdpSocket VERSION 2.0.0 LANGUAGES CXX)
+project(UdpSocket VERSION 3.0.0 LANGUAGES CXX)
 
 
 
@@ -50,7 +50,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/)
 ## LINK LIBRARIES
 ## linking all dependencies
 ################################################################################
-target_link_libraries(${PROJECT_NAME} Tracer)
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} ws2_32)
     if(MINGW)

@@ -1,80 +1,57 @@
 #include "UdpSocket.h"
 #include <iostream>
 #include <string>
-#include "Tracer.h"
-
 #include "UdpSocketVersion.h"
 
+
+
+// Link namespaces.
 using namespace cr::clib;
-using namespace cr::utils;
 
-static std::shared_ptr<Tracer>
-g_tracer = Tracer::createTracer(WARNING, "UdpSocket");
 
+
+/// Get library version.
 std::string UdpSocket::getVersion()
 {
     return UDP_SOCKET_VERSION;
 }
 
 
-UdpSocket::UdpSocket(SocketType type) :
-    m_socketType(type),
-    m_isHostAddrSet(false),
-    m_isDstAddrSet(false),
-    m_isOpen(false),
-    m_udpPortNum(0),
-    m_sock(0)
+
+/// Class constructor.
+UdpSocket::UdpSocket()
 {
-    memset(&m_hostAddr, 0, sizeof(sockaddr_in));
+    // Resed address structures.
     memset(&m_dstAddr, 0, sizeof(sockaddr_in));
+    memset(&m_srcAddr, 0, sizeof(sockaddr_in));
 }
 
 
+
+/// Class destructor.
 UdpSocket::~UdpSocket()
 {
+    // Close socket.
     close();
 }
 
 
-bool UdpSocket::open(uint16_t timeoutMs)
+
+/// Open socket.
+bool UdpSocket::open(uint16_t port,
+                     bool serverType,
+                     std::string dstIp,
+                     int timeoutMsec)
 {
-
-    int retVal;
-
-
-    if (m_socketType == SERVER && !m_isHostAddrSet)
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s\n", "Host IP Addr or Port is not setup");
-        return false;
-    }
-
-    if (m_socketType == CLIENT && !m_isDstAddrSet)
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s\n", "Dst IP Addr or Port is not setup");
-        return false;
-    }
-
-    // Check if socket already open.
-    if (m_isOpen)
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s\n", "Socket already open");
-        return false;
-    }
+    // Close socket first.
+    close();
 
     // Init params in Windows OS.
 #if defined(linux) || defined(__linux) || defined(__linux__)
 #else
     WSADATA wsaData;
-    int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (iResult != 0)
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s%d\n", "WSAStartup failed: ", iResult);
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
         return false;
-    }
 #endif
 
     // Init socket.
@@ -88,22 +65,27 @@ bool UdpSocket::open(uint16_t timeoutMs)
     {
         WSACleanup();
 #endif
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s\n", "Socket creation failed");
         return false;
     }
 
     // Bing socket if server type.
-    if (m_socketType == SERVER) {
+    if (serverType)
+    {
+        struct sockaddr_in hostAddr;
+        memset(&hostAddr, 0, sizeof(sockaddr_in));
+        hostAddr.sin_family = AF_INET;
+        std::string ip = "0.0.0.0";
+        if (!inet_pton(AF_INET, ip.c_str(), &hostAddr.sin_addr))
+            return false;
+        hostAddr.sin_port = htons(port);
+
 #if defined(linux) || defined(__linux) || defined(__linux__)
-        retVal = ::bind(m_sock, (struct sockaddr*)&m_hostAddr,sizeof(m_hostAddr));
+        if (::bind(m_sock, (struct sockaddr*)&hostAddr,sizeof(hostAddr)) < 0)
+        {
 #else
-        retVal = ::bind(m_sock, (SOCKADDR*)&m_hostAddr, sizeof(m_hostAddr));
-#endif
-#if defined(linux) || defined(__linux) || defined(__linux__)
-        if (retVal < 0) {
-#else
-        if (retVal == SOCKET_ERROR) {
+        if (::bind(m_sock, (SOCKADDR*)&hostAddr, sizeof(hostAddr)) ==
+                   SOCKET_ERROR)
+        {
 #endif
             // Close socket in case fail bind.
 #if defined(linux) || defined(__linux) || defined(__linux__)
@@ -112,8 +94,6 @@ bool UdpSocket::open(uint16_t timeoutMs)
             closesocket(m_sock);
             WSACleanup();
 #endif
-            TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-                  "%s\n", "Socket bind exception");
             return false;
         }
     }
@@ -121,53 +101,59 @@ bool UdpSocket::open(uint16_t timeoutMs)
 #if defined(linux) || defined(__linux) || defined(__linux__)
     // Init timeouts
     timeval timeparams;
-    timeparams.tv_sec = timeoutMs / 1000;
+    timeparams.tv_sec = timeoutMsec / 1000;
     // Timeout in microseconds for read data from socket.
-    timeparams.tv_usec = timeoutMs * 1000;
-    if (timeoutMs != 0) {
-        retVal = setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO,
-                            (const char*)&timeparams, sizeof(timeval));
+    timeparams.tv_usec = timeoutMsec * 1000;
+    if (timeoutMs != 0)
+    {
         // Close socket in case error
-        if (retVal < 0) {
+        if (setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO,
+                       (const char*)&timeparams, sizeof(timeval)) < 0)
+        {
             ::close(m_sock);
 #else
     // Init timeouts
     // Timeout in milliseconds for read data from socket.
-    DWORD _timeout = timeoutMs;
-    if (_timeout != 0) {
-        retVal = setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO,
-                            (const char*)&_timeout, sizeof(_timeout));
+    DWORD _timeout = timeoutMsec;
+    if (_timeout != 0)
+    {
         // Close socket in case error
-        if (retVal < 0) {
+        if (setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO,
+                       (const char*)&_timeout, sizeof(_timeout)) < 0)
+        {
             closesocket(m_sock);
             WSACleanup();
 #endif
-            TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-                  "%s\n", "Socket set timeout exception");
             return false;
         }
     }
 
 #if defined(linux) || defined(__linux) || defined(__linux__)
     int trueflag = 1;
-    retVal = setsockopt(m_sock, SOL_SOCKET, SO_BROADCAST,
-                        &trueflag, sizeof trueflag);
-    if (retVal < 0)
+    if (setsockopt(m_sock, SOL_SOCKET, SO_BROADCAST,
+                   &trueflag, sizeof(trueflag)) < 0)
     {
         ::close(m_sock);
 #else
     const char trueflag = 1;
-    retVal = setsockopt(m_sock, SOL_SOCKET, SO_BROADCAST,
-                        &trueflag, sizeof(trueflag));
     // Close socket in case error
-    if (retVal < 0) {
+    if (setsockopt(m_sock, SOL_SOCKET, SO_BROADCAST,
+                   &trueflag, sizeof(trueflag)) < 0) {
         closesocket(m_sock);
         WSACleanup();
 #endif
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s\n", "Socket set broadcast exception");
         return false;
     }
+
+    // Set dst address.
+    memset(&m_dstAddr, 0, sizeof(sockaddr_in));
+    m_dstAddr.sin_family = AF_INET;
+    if (!inet_pton(AF_INET, dstIp.c_str(), &m_dstAddr.sin_addr))
+    {
+        close();
+        return false;
+    }
+    m_dstAddr.sin_port = htons(port);
 
     // Init flag
     m_isOpen = true;
@@ -176,145 +162,95 @@ bool UdpSocket::open(uint16_t timeoutMs)
 }
 
 
-bool UdpSocket::setDstAddr(std::string dstIP, uint16_t dstPort)
-{
-    m_dstAddr.sin_family = AF_INET;
 
-    if (!inet_pton(AF_INET, dstIP.c_str(), &m_dstAddr.sin_addr))
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s%s\n", "Invalid Destination IP Addr: ", dstIP.c_str());
-        return false;
-    }
-
-    if (dstPort >= 1 && dstPort <= 65535)
-    {
-        m_dstAddr.sin_port = htons(dstPort);
-    }else
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s%d\n", "Invalid Destination Port: ", dstPort);
-        return false;
-    }
-
-    m_isDstAddrSet = true;
-    return m_isDstAddrSet;
-}
-
-
-bool UdpSocket::setDstAddr(sockaddr_in dstAddr)
-{
-    memcpy(&m_dstAddr, &dstAddr, sizeof (sockaddr_in));
-    m_isDstAddrSet = true;
-    return m_isDstAddrSet;
-}
-
-bool UdpSocket::setHostAddr(std::string hostIP, uint16_t hostPort)
-{
-    m_hostAddr.sin_family = AF_INET;
-
-    if (!inet_pton(AF_INET, hostIP.c_str(), &m_hostAddr.sin_addr))
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s%s\n", "Invalid Host IP Addr: ", hostIP.c_str());
-        return false;
-    }
-
-    if (hostPort >= 1 && hostPort <= 65535)
-    {
-        m_hostAddr.sin_port = htons(hostPort);
-    }else
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s%d\n", "Invalid Host Port: ", hostPort);
-        return false;
-    }
-
-    m_isHostAddrSet = true;
-    return m_isHostAddrSet;
-}
-
-bool UdpSocket::setHostAddr(sockaddr_in hostAddr)
-{
-    memcpy(&m_hostAddr, &hostAddr, sizeof (sockaddr_in));
-    m_isHostAddrSet = true;
-    return m_isHostAddrSet;
-}
-
-
-int UdpSocket::readData(uint8_t* buf, uint32_t bufSize, sockaddr_in* srcAddr)
+// Read data.
+int UdpSocket::read(uint8_t* data, int size, sockaddr_in* srcAddr)
 {
     // Check if socket not open.
     if (!m_isOpen)
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s\n", "Socket not open");
-		return -1;
-    }
+        return -1;
 
     // Wait and read data from socket.
-    sockaddr_in _srcAddr;
     int ret = 0;
 #if defined(linux) || defined(__linux) || defined(__linux__)
-    socklen_t _srcAddrSize = sizeof (_srcAddr);
-    memset(&_srcAddr, 0, _srcAddrSize);
-    ret = recvfrom(m_sock, reinterpret_cast<char*>(buf), bufSize, 0,
-                   (struct sockaddr*)&_srcAddr, &_srcAddrSize);
+    socklen_t _srcAddrSize = sizeof (m_srcAddr);
+    ret = recvfrom(m_sock, reinterpret_cast<char*>(data), size, 0,
+                   (struct sockaddr*)&m_srcAddr, &_srcAddrSize);
 #else
-    int _srcAddrSize = sizeof (_srcAddr);
-    memset(&_srcAddr, 0, _srcAddrSize);
-    ret = recvfrom(m_sock, reinterpret_cast<char*>(buf), bufSize, 0,
-                   (struct sockaddr*)&_srcAddr, &_srcAddrSize);
+    int _srcAddrSize = sizeof(m_srcAddr);
+    ret = recvfrom(m_sock, reinterpret_cast<char*>(data), size, 0,
+                   (struct sockaddr*)&m_srcAddr, &_srcAddrSize);
 #endif
 
     if (srcAddr != nullptr)
-        memcpy(srcAddr, &_srcAddr, _srcAddrSize);
+        memcpy(srcAddr, &m_srcAddr, _srcAddrSize);
 
     return ret;
 }
 
 
-int UdpSocket::sendData(uint8_t* data, uint32_t dataSize,
-                            sockaddr_in* dstAddr)
+
+// Send data.
+int UdpSocket::send(uint8_t* data, int size, sockaddr_in* dstAddr)
 {
     // Check if socket not open.
     if (!m_isOpen)
-    {
-        TRACE(g_tracer, LONG_PRINT, EXCEPTION,
-              "%s\n", "Socket not open");
         return -1;
-    }
 
-	// Send data.
+    // Send data.
     if (dstAddr != nullptr)
-        return sendto(m_sock, reinterpret_cast<char*>(data), dataSize, 0,
+        return sendto(m_sock, reinterpret_cast<char*>(data), size, 0,
                       (struct sockaddr*)dstAddr, sizeof(dstAddr));
     else
-        return sendto(m_sock, reinterpret_cast<char*>(data), dataSize, 0,
+        return sendto(m_sock, reinterpret_cast<char*>(data), size, 0,
                       (struct sockaddr*)&m_dstAddr, sizeof(m_dstAddr));
 }
 
 
+
+/// Close socket.
 void UdpSocket::close()
 {
-	// Close socket
+    // Close socket
     if (m_isOpen)
-	{
+    {
 #if defined(linux) || defined(__linux) || defined(__linux__)
         ::close(m_sock);
 #else
         closesocket(m_sock);
-		WSACleanup();
+        WSACleanup();
 #endif
-	}
-	// Reset flags.
-    m_udpPortNum = 0;
+    }
     m_isOpen = false;
 }
 
 
+
+/// Check open status.
 bool UdpSocket::isOpen()
 {
     return m_isOpen;
 }
+
+
+
+/// Get IP of data source.
+std::string UdpSocket::getIp(sockaddr_in* srcAddr)
+{
+    char str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(srcAddr->sin_addr), str, INET_ADDRSTRLEN);
+
+    return std::string(str);
+}
+
+
+
+/// Get UDP port of data source.
+int UdpSocket::getPort(sockaddr_in* srcAddr)
+{
+    return htons(srcAddr->sin_port);
+}
+
+
+
 
