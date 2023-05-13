@@ -1,6 +1,6 @@
-#include "UdpSocket.h"
-#include <iostream>
 #include <string>
+#include <string.h>
+#include "UdpSocket.h"
 #include "UdpSocketVersion.h"
 
 
@@ -59,7 +59,8 @@ bool UdpSocket::open(uint16_t port,
 
     // Close socket in case fail initialization
 #if defined(linux) || defined(__linux) || defined(__linux__)
-    if (m_sock == -1) {
+    if (m_sock == -1)
+    {
 #else
     if (m_sock == INVALID_SOCKET)
     {
@@ -80,7 +81,7 @@ bool UdpSocket::open(uint16_t port,
         hostAddr.sin_port = htons(port);
 
 #if defined(linux) || defined(__linux) || defined(__linux__)
-        if (::bind(m_sock, (struct sockaddr*)&hostAddr,sizeof(hostAddr)) < 0)
+        if (::bind(m_sock, (struct sockaddr*)&hostAddr, sizeof(hostAddr)) < 0)
         {
 #else
         if (::bind(m_sock, (SOCKADDR*)&hostAddr, sizeof(hostAddr)) ==
@@ -103,8 +104,8 @@ bool UdpSocket::open(uint16_t port,
     timeval timeparams;
     timeparams.tv_sec = timeoutMsec / 1000;
     // Timeout in microseconds for read data from socket.
-    timeparams.tv_usec = timeoutMsec * 1000;
-    if (timeoutMs != 0)
+    timeparams.tv_usec = timeoutMsec % 1000;
+    if (timeoutMsec != 0)
     {
         // Close socket in case error
         if (setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO,
