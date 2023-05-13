@@ -1,300 +1,389 @@
-## CONTENTS
-- [OVERVIEW](#overview)
-- [API DESCRIPTION](#api-description)
-  - [getVersion(..)](#getversion)
-  - [UdpSocket(..)](#udpsocket)
-  - [setDstAddr(..)](#setdstaddr)
-  - [setHostAddr(..)](#sethostaddr)
-  - [open(..)](#open)
-  - [readData(..)](#readdata)
-  - [sendData(..)](#senddata)
-  - [isOpen(..)](#isopen)
-  - [close(..)](#close)
-- [USAGE EXAMPLE](#usage-example)
-  - [Server Socket](#server-socket-type)
-  - [Client Socket](#client-socket-type)
-  
+![logo](_static/udp_socket_logo.png)
 
-## OVERVIEW
+# **UdpSocket C++ library**
 
-This project makes it easy to work with a UDP socket to create client-server applications.
+**v3.0.0**
 
-## API DESCRIPTION
-The **UdpSocket** contains one class `UdpSocket` which can be used 
-to simplify sending and receiving data over the UDP transport layer. 
+------
 
-A UdpSocket can be configured as a *server socket*, which will listen 
-for data on a specific port, or a *client socket*, which will send data to a 
-specific port. 
+# Table of contents
 
-### getVersion(..)
+- [Overview](#Overview)
+- [Versions](#Versions)
+- [UdpSocket class description](#UdpSocket-class-description)
+  - [Class declaration](#Class-declaration)
+  - [getVersion method](#getVersion-method)
+  - [open method](#open-method)
+  - [read method](#read-method)
+  - [send method](#send-method)
+  - [isOpen method](#isOpen-method)
+  - [close method](#close-method)
+  - [getIp-method](#getIp-method)
+  - [getPort method](#getPort-method)
+- [Examples](#Examples)
+  - [Data sender](#Data-sender)
+  - [Data receiver](#Data-receiver)
+
+# Overview
+
+**UdpSocket** C++ library provides methos to work with UDP port (open, close, send data and receive data). **UdpSocket** library is cross-platform and compatible with Windows and Linux OS. Main file **UdpSocket.h** includes declaration of **UdpSocket** class which provides methods to work with UDP socket.
+
+# Versions
+
+**Table 1** - Library versions.
+
+| Version | Release date | What's new                                                   |
+| ------- | ------------ | ------------------------------------------------------------ |
+| 1.0.0   | 10.10.2021   | First version                                                |
+| 2.0.0   | 17.05.2022   | - Class interface changed.<br />- Added Tracker library to print debug info. |
+| 3.0.0   | 13.05.2023   | - Class interface changed.<br />- Tracer library excluded.   |
+
+# UdpSocket class description
+
+## Class declaration
+
+**UdpSocket** interface class declared in **UdpSocket.h** file. Class declaration:
 
 ```cpp
+namespace cr
+{
+namespace clib
+{
 /**
- * @brief Method to get string of current version of library.
- *
- * @return String of current library version.
+ * @brief UDP Socket class.
  */
+class UdpSocket
+{
+public:
+
+    /**
+     * @brief Get current library version.
+     * @return String of current library version in format "X.Y.Z".
+     */
+    static std::string getVersion();
+
+    /**
+     * @brief Class constructor.
+     */
+    UdpSocket();
+
+    /**
+     * @brief Class destructor.
+     */
+    ~UdpSocket();
+
+    /**
+     * @brief Open UDP socket.
+     * @param port UDP port.
+     * @param serverType TRUE to send/receive data, FALSE only to send data.
+     *        (socket will not be bind).
+     * @param timeoutMsec Wait data timeout in milliseconds.
+     * @return TRUE in socket open or FALSE if not.
+     */
+    bool open(uint16_t port,
+              bool serverType = false,
+              std::string dstIp = "127.0.0.1",
+              int timeoutMsec = 100);
+
+    /**
+     * @brief Read data.
+     * @param data Pointer to data buffer to copy data (not nullptr).
+     * @param size Size of buffer.
+     * @param srcAddr Pointer to structure from which the data was read.
+     * @return Number of read bytes or return -1 in case error.
+     */
+    int read(uint8_t* data,
+             int size,
+             sockaddr_in* srcAddr = nullptr);
+
+    /**
+     * @brief Send data.
+     * @param data Pointer to data to send.
+     * @param size Size of data to send.
+     * @param dstAddr Pointer to structure to data to send.
+     * @return Number of bytes sent or return -1 if UDP socket not open.
+     */
+    int send(uint8_t* data, int size, sockaddr_in* dstAddr = nullptr);
+
+    /**
+     * @brief Check if UDP socket open.
+     * @return TRUE if socket open or FALSE if not.
+     */
+    bool isOpen();
+
+    /**
+     * @brief Close UDP socket.
+     */
+    void close();
+
+    /**
+     * @brief Get IP of data source.
+     * @param srcAddr Pointer to structure from which the data was read.
+     * @return IP of data source.
+     */
+    std::string getIp(sockaddr_in* srcAddr);
+
+    /**
+     * @brief Get UDP port of data source.
+     * @param srcAddr Pointer to structure from which the data was read.
+     * @return UDP port of data source.
+     */
+    int getPort(sockaddr_in* srcAddr);
+};
+}
+}
+```
+
+## getVersion method
+
+**getVersion()** method return string of current class version. Method declaration:
+
+```cpp
 static std::string getVersion();
 ```
 
-##### Description
-
-*Static method to get string of current version of library.*
-
-
-### UdpSocket(..)
+Method can be used without **UdpSocket** class instance:
 
 ```cpp
-// Socket Type
-typedef enum {
-    SERVER,
-    CLIENT
-}SocketType;
-
-/**
- * @brief Class constructor.
- *
- * @param type Server or Client socket type.
- */
-UdpSocket(SocketType type);
+std::cout << "UdpSocket version: " << cr::clib::UdpSocket::getVersion() << std::endl;
 ```
 
-##### Description
+## open method
 
-*Class constructor, can be configured as a *server* or *client* socket*
-
-### setDstAddr(..)
+**open(...)** method designed to initialize UDP socket. Method declaration:
 
 ```cpp
-/**
- * @brief Method to set destination address.
- *
- * @param dstIP Destination IP address.
- * @param dstPort Destination UDP port number.
- *
- * @return TRUE if the address and port are set. FALSE in case any errors.
- */
-bool setDstAddr(std::string dstIP, uint16_t dstPort);
+bool open(uint16_t port, bool serverType = false, std::string dstIp = "127.0.0.1", int timeoutMsec = 100);
 ```
 
-##### Description
+| Parameter   | Value                                                        |
+| ----------- | ------------------------------------------------------------ |
+| port        | UDP port. Must have values from 0 to 65535.                  |
+| serverType  | Socket type: TRUE - socket will be able to read and write data, FALSE - socket will be able only send data. |
+| dstIp       | Destination IP address.                                      |
+| timeoutMsec | Wait data timeout. Method sets timeout to UDP socket properties. Timeout determines behavior of **read(...)** method: method will wait input data maximum **timeoutMsec** milliseconds and will return negative results if no input data. |
 
-*Method to set destination address (for Client-sockets)*
+**Returns:** TRUE if the UDP port open or FALSE if not.
 
+## read method
 
-### setHostAddr(..)
+**read(...)** method designed to read (wait) input data. After receiving input data the method will return control immediately or will return control after timeout (set in **open(...)** method) if no input data.  Method declaration:
 
 ```cpp
-/**
- * @brief Method to set host address.
- *
- * @param hostIP Host IP address.
- * @param hostPort Host UDP port number.
- *
- * @return TRUE if the address and port are set. FALSE in case any errors.
- */
-bool setHostAddr(std::string hostIP, uint16_t hostPort);
+int read(uint8_t* data, int size, sockaddr_in* srcAddr = nullptr);
 ```
 
-##### Description
+| Parameter | Value                                                        |
+| --------- | ------------------------------------------------------------ |
+| data      | Pointer to data buffer.                                      |
+| size      | Size of data buffer and maximum data size to read from socket. |
+| srcAddr   | Optional pointer to address structure. Method returns address structure of data source. User can use it to send data back to data source. |
 
-*Method to set host address (for Server-sockets)*
+**Returns:** Number of bytes or **-1** if no input data or timeout expired (set in **open(...)** method) or UDP socket not open.
 
-### open(..)
+## send method
+
+**send(...)** method designed to send data. Method declaration:
 
 ```cpp
-/**
- * @brief Method to open UDP socket.
- *
- * @param timeoutMs Wait data timeout in milliseconds.
- *
- * @return TRUE in case success, FALSE in case any errors.
- */
-bool open(uint16_t timeoutMs = 100);
+int send(uint8_t* data, int size, sockaddr_in* dstAddr = nullptr);
 ```
 
-##### Description
+| Parameter | Value                                                        |
+| --------- | ------------------------------------------------------------ |
+| data      | Pointer to data buffer.                                      |
+| size      | Size of data to send.                                        |
+| dstAddr   | Optional pointer to address structure. If address structure provide method will send data to this address. |
 
-*Method to open UDP socket.*
+**Returns:** Number of bytes sent or **-1** if data not sent or UDP socket not open.
 
-> Before calling this method, you must configure the socket with the setDstAddr() method for the client and setHostAddr() method for server socket.
+## isOpen method
 
-### readData(..)
-
-```cpp
-/**
- * @brief Method to read data.
- *
- * @param buf pointer to data buffer to copy data (not nullptr).
- * @param bufSize size of buf.
- * @param srcAddr pointer to structure from which the data was read.
- *
- * @return Number of read bytes or return -1 in case error.
- */
-int readData(uint8_t* buf, uint32_t bufSize,
-             sockaddr_in* srcAddr = nullptr);
-```
-
-##### Description
-
-*Method to read data.*
-
-### sendData(..)
+**isOpen()** method returns UDP socket open status. Method declaration:
 
 ```cpp
-/**
- * @brief Method to send data.
- *
- * @param data pointer to data to send.
- * @param dataSize size of data to send.
- * @param dstAddr pointer to structure to data to send.
- *
- * @return Number of bytes sent or return -1 if UDP socket not open.
- */
-int sendData(uint8_t* data, uint32_t dataSize,
-             sockaddr_in* dstAddr = nullptr);
-```
-
-##### Description
-
-*Method to send data.*
-
-### isOpen(..)
-
-```cpp
-/**
- * @brief Method to check if UDP socket open.
- * @return TRUE if socket open or FALSE.
- */
 bool isOpen();
 ```
 
-##### Description
+**Returns:** TRUE if UPD socket open or FALSE if not.
 
-*Method to check if UDP socket open.*
+## close method
 
-### close(..)
+close() method designed to close socket if it open. Method declaration:
 
 ```cpp
-/**
- * @brief Method to close UDP socket.
- */
 void close();
 ```
 
-##### Description
+## getIp method
 
-*Method to close UDP socket.*
-
-## USAGE EXAMPLE
-
-### Server Socket Type
-The server socket type is created as follows:
+**getIp(...)** method designed to extract IP address from address structure. Method declaration:
 
 ```cpp
-#include "UdpSocket.h"
-using namespace cr::clib;
+std::string getIp(sockaddr_in* srcAddr);
+```
 
+| Parameter | Value                         |
+| --------- | ----------------------------- |
+| srcAddr   | Pointer to address structure. |
+
+**Returns:** IP string.
+
+## getPort method
+
+**getPort(...)** method designed to extract UDP port from address structure. Method declaration:
+
+```cpp
+int getPort(sockaddr_in* srcAddr);
+```
+
+| Parameter | Value                         |
+| --------- | ----------------------------- |
+| srcAddr   | Pointer to address structure. |
+
+**Returns:** UDP port.
+
+# Examples
+
+## Data sender
+
+Test application shows how to create socket only to send data. Test application send random data periodically.
+
+```cpp
+#include <iostream>
+#include <chrono>
+#include <ctime>
+#include <thread>
+#include "UdpSocket.h"
+
+// Link namespaces.
+using namespace std;
+using namespace cr::clib;
+using namespace std::chrono;
+
+// Entry point.
 int main(void)
 {
-    UdpSocket server(UdpSocket::SERVER);
+    cout<< "Data sender v" << UdpSocket::getVersion() << endl << endl;
 
-    // Set host network params.
-    std::string hostIpAddr = "127.0.0.1";
-    uint16_t hostUdpPort = 50000;
-    server.setHostAddr(hostIpAddr, hostUdpPort);
+    // Enter destination IP.
+    string ip = "";
+    cout << "Enter destination IP: ";
+    cin >> ip;
 
-    // Try open server socket.
-    uint16_t timeout = 500; //< read timeout, [ms]
-    if (!server.open(timeout))
+    // Enter UDP port.
+    int port = 0;
+    cout << "Enter UDP port: ";
+    cin >> port;
+
+    // Enter sending data period ms.
+    int cyclePeriodMsec = 0;
+    cout << "Enter sending data period msec: ";
+    cin >> cyclePeriodMsec;
+
+    // Enter number of bytes.
+    int numBytes = 0;
+    cout << "Enter num bytes to send [0-8192]: ";
+    cin >> numBytes;
+
+    // Init UDP socket: clietn (only to send data), default destination IP.
+    UdpSocket udpSocket;
+    if (!udpSocket.open(port, false, ip))
     {
-        std::cerr << "UDP-socket can not open!" << std::endl;
+        cout << "ERROR: Can't init UDP socket. Exit." << endl;
+        this_thread::sleep_for(seconds(1));
         return -1;
     }
 
-    // Read data from clients.
-    int ret = 0;
-    sockaddr_in srcSockAddr = {0};
-    uint32_t buffSize = 512; //< Any value.
-    uint8_t* buff = new uint8_t[buffSize];
+    // Init variables.
+    uint8_t* data = new uint8_t[numBytes];
+
+    // Main loop.
+    time_point<system_clock> startTime = system_clock::now();
     while (true)
     {
-        ret = server.readData(buff, buffSize, &srcSockAddr);
-        if (ret <= 0) {
-            std::cout << "No data received..." << std::endl;
+        // Prepare random data.
+        for (int i = 0; i < numBytes; ++i)
+            data[i] = (uint8_t)(rand() % 255);
+
+        // Send data.
+        cout << udpSocket.send(data, numBytes) << " bytes sent" << endl;
+
+        // Wait according to parameters.
+        int waitTime = (int)duration_cast<milliseconds>(system_clock::now() -
+                                                        startTime).count();
+        waitTime = cyclePeriodMsec - waitTime;
+        if (waitTime > 0)
+            this_thread::sleep_for(milliseconds(waitTime));
+        startTime = system_clock::now();
+    }
+
+    return 1;
+}
+```
+
+## Data receiver
+
+Test application shows how to create socket to read and send. Test application receives and shows info about input data.
+
+```cpp
+#include <iostream>
+#include <chrono>
+#include <ctime>
+#include <thread>
+#include "UdpSocket.h"
+
+// Link namespaces.
+using namespace std;
+using namespace cr::clib;
+using namespace std::chrono;
+
+// Entry point.
+int main(void)
+{
+    cout<< "Data receiver v" << UdpSocket::getVersion() << endl << endl;
+
+    // Set UDP port.
+    int port = 0;
+    cout << "Enter UDP port: ";
+    cin >> port;
+
+    // Set wait data timeout.
+    int timeoutMsec = 0;
+    cout << "Enter wait data timeout, msec: ";
+    cin >> timeoutMsec;
+
+    // Init UDP socket: server, default destination IP.
+    UdpSocket udpSocket;
+    if (!udpSocket.open(port, true, "127.0.0.1", timeoutMsec))
+    {
+        cout << "ERROR: Can't init UDP socket. Exit." << endl;
+        this_thread::sleep_for(seconds(1));
+        return -1;
+    }
+
+    // Init variables.
+    const int bufferSize = 1024;
+    uint8_t data[bufferSize];
+
+    // Main loop.
+    while (true)
+    {
+        // Read data. Max wait time = timeoutMsec.
+        struct sockaddr_in addr;
+        int bytes = udpSocket.read(data, bufferSize, &addr);
+
+        // Check input data size.
+        if (bytes <= 0)
+        {
+            cout << "No input data" << endl;
             continue;
         }
 
-        std::cout << ret << " bytes were received" << std::endl;
-
-        // Print source address from which data was received.
-        /* 
-        char str[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &(srcSockAddr.sin_addr), str, INET_ADDRSTRLEN);
-        std::cout << "Src IP Addr\t: " << str << std::endl;
-        std::cout << "Src Port\t: " << ntohs(srcSockAddr.sin_port) << std::endl;
-        */
-
-        // Send received data to the client.
-        server.setDstAddr(srcSockAddr);
-        ret = server.sendData(buff, ret);
-        if (ret > 0) 
-            std::cout << ret << " bytes were sent" << std::endl;
-        else 
-            std::cerr << "Data sending error!" << std::endl;
+        // Show data about sender.
+        cout << bytes << " bytes read from " << udpSocket.getIp(&addr) << "/" <<
+                udpSocket.getPort(&addr) << endl;
     }
-    delete[] buff;
 }
 ```
 
-### Client Socket Type
-The client socket type is created as follows:
-
-```cpp
-#include "UdpSocket.h"
-using namespace cr::clib;
-
-int main(void)
-{
-    UdpSocket client(UdpSocket::CLIENT);
-
-    // Set destination network params.
-    std::string dstIpAddr = "127.0.0.1";
-    uint16_t dstUdpPort = 50000;
-    client.setDstAddr(dstIpAddr, dstUdpPort);
-
-    // Try open client socket.
-    uint16_t timeout = 1000; //< read timeout, [ms]
-    if (!client.open(timeout))
-    {
-        std::cerr << "UDP-socket can not open!" << std::endl;
-    }
-
-    // Send data to server.
-    int ret = 0;
-    int testValue = 0;
-    uint32_t dataSize = 512; //< Any value.
-    uint8_t* data = new uint8_t[dataSize];
-    while (true)
-    {
-        // Fill the data with an increasing value.
-        memset(data, testValue++, dataSize);
-        ret = client.sendData(data, dataSize);
-        if (ret <= 0) {
-            std::cerr << "Data sending error!" << std::endl;
-            return -1;
-        }
-
-        std::cout << ret << " bytes were sent" << std::endl;
-
-        // Try to receive answer.
-        ret = client.readData(data, dataSize);
-        if (ret > 0)
-            std::cout << ret << " bytes were received" << std::endl;
-        else
-            std::cerr << "No data received..." << std::endl;
-    }
-    delete[] data;
-}
-```
