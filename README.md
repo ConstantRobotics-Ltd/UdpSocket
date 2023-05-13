@@ -2,7 +2,7 @@
 
 # **UdpSocket C++ library**
 
-**v3.0.0**
+**v3.0.1**
 
 ------
 
@@ -37,6 +37,7 @@
 | 1.0.0   | 10.10.2021   | First version                                                |
 | 2.0.0   | 17.05.2022   | - Class interface changed.<br />- Added Tracker library to print debug info. |
 | 3.0.0   | 13.05.2023   | - Class interface changed.<br />- Tracer library excluded.   |
+| 3.0.1   | 13.05.2023   | - Fixed send data to external address.                       |
 
 # UdpSocket class description
 
