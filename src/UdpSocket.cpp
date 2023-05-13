@@ -201,10 +201,10 @@ int UdpSocket::send(uint8_t* data, int size, sockaddr_in* dstAddr)
     // Send data.
     if (dstAddr != nullptr)
         return sendto(m_sock, reinterpret_cast<char*>(data), size, 0,
-                      (struct sockaddr*)dstAddr, sizeof(dstAddr));
+                      (struct sockaddr*)dstAddr, sizeof(sockaddr_in));
     else
         return sendto(m_sock, reinterpret_cast<char*>(data), size, 0,
-                      (struct sockaddr*)&m_dstAddr, sizeof(m_dstAddr));
+                      (struct sockaddr*)&m_dstAddr, sizeof(sockaddr_in));
 }
 
 
