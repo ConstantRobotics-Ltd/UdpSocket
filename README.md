@@ -1,8 +1,8 @@
-![logo](_static/udp_socket_logo.png)
+![logo](_static/udp_socket_web_logo.png)
 
 # **UdpSocket C++ library**
 
-**v3.0.1**
+**v3.1.0**
 
 ------
 
@@ -24,9 +24,13 @@
   - [Data sender](#Data-sender)
   - [Data receiver](#Data-receiver)
 
+
+
 # Overview
 
 **UdpSocket** C++ library provides methos to work with UDP port (open, close, send data and receive data). **UdpSocket** library is cross-platform and compatible with Windows and Linux OS. Main file **UdpSocket.h** includes declaration of **UdpSocket** class which provides methods to work with UDP socket.
+
+
 
 # Versions
 
@@ -38,6 +42,9 @@
 | 2.0.0   | 17.05.2022   | - Class interface changed.<br />- Added Tracker library to print debug info. |
 | 3.0.0   | 13.05.2023   | - Class interface changed.<br />- Tracer library excluded.   |
 | 3.0.1   | 13.05.2023   | - Fixed send data to external address.                       |
+| 3.1.0   | 27.08.2023   | - License added.<br />- Repository made public.              |
+
+
 
 # UdpSocket class description
 
@@ -135,6 +142,8 @@ public:
 }
 ```
 
+
+
 ## getVersion method
 
 **getVersion()** method return string of current class version. Method declaration:
@@ -148,6 +157,8 @@ Method can be used without **UdpSocket** class instance:
 ```cpp
 std::cout << "UdpSocket version: " << cr::clib::UdpSocket::getVersion() << std::endl;
 ```
+
+
 
 ## open method
 
@@ -166,6 +177,8 @@ bool open(uint16_t port, bool serverType = false, std::string dstIp = "127.0.0.1
 
 **Returns:** TRUE if the UDP port open or FALSE if not.
 
+
+
 ## read method
 
 **read(...)** method designed to read (wait) input data. After receiving input data the method will return control immediately or will return control after timeout (set in **open(...)** method) if no input data.  Method declaration:
@@ -181,6 +194,8 @@ int read(uint8_t* data, int size, sockaddr_in* srcAddr = nullptr);
 | srcAddr   | Optional pointer to address structure. Method returns address structure of data source. User can use it to send data back to data source. |
 
 **Returns:** Number of bytes or **-1** if no input data or timeout expired (set in **open(...)** method) or UDP socket not open.
+
+
 
 ## send method
 
@@ -198,6 +213,8 @@ int send(uint8_t* data, int size, sockaddr_in* dstAddr = nullptr);
 
 **Returns:** Number of bytes sent or **-1** if data not sent or UDP socket not open.
 
+
+
 ## isOpen method
 
 **isOpen()** method returns UDP socket open status. Method declaration:
@@ -208,6 +225,8 @@ bool isOpen();
 
 **Returns:** TRUE if UPD socket open or FALSE if not.
 
+
+
 ## close method
 
 close() method designed to close socket if it open. Method declaration:
@@ -215,6 +234,8 @@ close() method designed to close socket if it open. Method declaration:
 ```cpp
 void close();
 ```
+
+
 
 ## getIp method
 
@@ -244,7 +265,11 @@ int getPort(sockaddr_in* srcAddr);
 
 **Returns:** UDP port.
 
+
+
 # Examples
+
+
 
 ## Data sender
 
@@ -322,6 +347,8 @@ int main(void)
     return 1;
 }
 ```
+
+
 
 ## Data receiver
 
