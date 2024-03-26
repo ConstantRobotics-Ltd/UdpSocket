@@ -1,34 +1,37 @@
-![logo](_static/udp_socket_web_logo.png)
+![udp_socket_web_logo](_static/udp_socket_web_logo.png)
+
+
 
 # **UdpSocket C++ library**
 
-**v3.1.0**
+**v3.1.1**
 
-------
+
 
 # Table of contents
 
-- [Overview](#Overview)
-- [Versions](#Versions)
-- [UdpSocket class description](#UdpSocket-class-description)
-  - [Class declaration](#Class-declaration)
-  - [getVersion method](#getVersion-method)
+- [Overview](#overview)
+- [Versions](#versions)
+- [UdpSocket class description](#udpsocket-class-description)
+  - [UdpSocket class declaration](#udpsocket-class-declaration)
+  - [getVersion method](#getversion-method)
   - [open method](#open-method)
   - [read method](#read-method)
   - [send method](#send-method)
-  - [isOpen method](#isOpen-method)
+  - [isOpen method](#isopen-method)
   - [close method](#close-method)
-  - [getIp-method](#getIp-method)
-  - [getPort method](#getPort-method)
-- [Examples](#Examples)
-  - [Data sender](#Data-sender)
-  - [Data receiver](#Data-receiver)
+  - [getIp-method](#getip-method)
+  - [getPort method](#getport-method)
+- [Examples](#examples)
+  - [Data sender](#data-sender)
+  - [Data receiver](#data-receiver)
+- [Build and connect to your project](#build-and-connect-to-your-project)
 
 
 
 # Overview
 
-**UdpSocket** C++ library provides methos to work with UDP port (open, close, send data and receive data). **UdpSocket** library is cross-platform and compatible with Windows and Linux OS. Main file **UdpSocket.h** includes declaration of **UdpSocket** class which provides methods to work with UDP socket.
+**UdpSocket** C++ library provides methods to work with UDP port (open, close, send data and receive data). **UdpSocket** library is cross-platform and compatible with Windows and Linux OS. Main file **UdpSocket.h** includes declaration of **UdpSocket** class which provides methods to work with UDP socket. The library requires C++17 standard. The library doesn't have any third-party dependency. The library is licensed under the **Apache 2.0** license.
 
 
 
@@ -43,110 +46,65 @@
 | 3.0.0   | 13.05.2023   | - Class interface changed.<br />- Tracer library excluded.   |
 | 3.0.1   | 13.05.2023   | - Fixed send data to external address.                       |
 | 3.1.0   | 27.08.2023   | - License added.<br />- Repository made public.              |
+| 3.1.1   | 26.03.2024   | - Documentation updated.                                     |
 
 
 
 # UdpSocket class description
 
-## Class declaration
+
+
+## UdpSocket class declaration
 
 **UdpSocket** interface class declared in **UdpSocket.h** file. Class declaration:
 
 ```cpp
-namespace cr
-{
-namespace clib
-{
-/**
- * @brief UDP Socket class.
- */
 class UdpSocket
 {
 public:
 
-    /**
-     * @brief Get current library version.
-     * @return String of current library version in format "X.Y.Z".
-     */
+    /// Get current library version.
     static std::string getVersion();
 
-    /**
-     * @brief Class constructor.
-     */
+    /// Class constructor.
     UdpSocket();
 
-    /**
-     * @brief Class destructor.
-     */
+    /// Class destructor.
     ~UdpSocket();
 
-    /**
-     * @brief Open UDP socket.
-     * @param port UDP port.
-     * @param serverType TRUE to send/receive data, FALSE only to send data.
-     *        (socket will not be bind).
-     * @param timeoutMsec Wait data timeout in milliseconds.
-     * @return TRUE in socket open or FALSE if not.
-     */
+    /// Open UDP socket.
     bool open(uint16_t port,
               bool serverType = false,
               std::string dstIp = "127.0.0.1",
               int timeoutMsec = 100);
 
-    /**
-     * @brief Read data.
-     * @param data Pointer to data buffer to copy data (not nullptr).
-     * @param size Size of buffer.
-     * @param srcAddr Pointer to structure from which the data was read.
-     * @return Number of read bytes or return -1 in case error.
-     */
+    /// Read data.
     int read(uint8_t* data,
              int size,
              sockaddr_in* srcAddr = nullptr);
 
-    /**
-     * @brief Send data.
-     * @param data Pointer to data to send.
-     * @param size Size of data to send.
-     * @param dstAddr Pointer to structure to data to send.
-     * @return Number of bytes sent or return -1 if UDP socket not open.
-     */
+    /// Send data.
     int send(uint8_t* data, int size, sockaddr_in* dstAddr = nullptr);
 
-    /**
-     * @brief Check if UDP socket open.
-     * @return TRUE if socket open or FALSE if not.
-     */
+    /// Check if UDP socket open.
     bool isOpen();
 
-    /**
-     * @brief Close UDP socket.
-     */
+    /// Close UDP socket.
     void close();
 
-    /**
-     * @brief Get IP of data source.
-     * @param srcAddr Pointer to structure from which the data was read.
-     * @return IP of data source.
-     */
+    /// Get IP of data source.
     std::string getIp(sockaddr_in* srcAddr);
 
-    /**
-     * @brief Get UDP port of data source.
-     * @param srcAddr Pointer to structure from which the data was read.
-     * @return UDP port of data source.
-     */
+    /// Get UDP port of data source.
     int getPort(sockaddr_in* srcAddr);
 };
-}
-}
 ```
 
 
 
 ## getVersion method
 
-**getVersion()** method return string of current class version. Method declaration:
+The **getVersion()** method returns string of current class version. Method declaration:
 
 ```cpp
 static std::string getVersion();
@@ -158,11 +116,17 @@ Method can be used without **UdpSocket** class instance:
 std::cout << "UdpSocket version: " << cr::clib::UdpSocket::getVersion() << std::endl;
 ```
 
+Console output:
+
+```bash
+UdpSocket version: 3.1.1
+```
+
 
 
 ## open method
 
-**open(...)** method designed to initialize UDP socket. Method declaration:
+The **open(...)** method initializes UDP socket. Method declaration:
 
 ```cpp
 bool open(uint16_t port, bool serverType = false, std::string dstIp = "127.0.0.1", int timeoutMsec = 100);
@@ -172,7 +136,7 @@ bool open(uint16_t port, bool serverType = false, std::string dstIp = "127.0.0.1
 | ----------- | ------------------------------------------------------------ |
 | port        | UDP port. Must have values from 0 to 65535.                  |
 | serverType  | Socket type: TRUE - socket will be able to read and write data, FALSE - socket will be able only send data. |
-| dstIp       | Destination IP address.                                      |
+| dstIp       | Destination IP address to send data.                         |
 | timeoutMsec | Wait data timeout. Method sets timeout to UDP socket properties. Timeout determines behavior of **read(...)** method: method will wait input data maximum **timeoutMsec** milliseconds and will return negative results if no input data. |
 
 **Returns:** TRUE if the UDP port open or FALSE if not.
@@ -181,7 +145,7 @@ bool open(uint16_t port, bool serverType = false, std::string dstIp = "127.0.0.1
 
 ## read method
 
-**read(...)** method designed to read (wait) input data. After receiving input data the method will return control immediately or will return control after timeout (set in **open(...)** method) if no input data.  Method declaration:
+The **read(...)** method designed to read (wait) input data. After receiving input data the method will return control immediately or will return control after timeout (set in [open(...)](#open-method) method) if no input data.  Method declaration:
 
 ```cpp
 int read(uint8_t* data, int size, sockaddr_in* srcAddr = nullptr);
@@ -199,7 +163,7 @@ int read(uint8_t* data, int size, sockaddr_in* srcAddr = nullptr);
 
 ## send method
 
-**send(...)** method designed to send data. Method declaration:
+The **send(...)** method sends data. Method declaration:
 
 ```cpp
 int send(uint8_t* data, int size, sockaddr_in* dstAddr = nullptr);
@@ -217,7 +181,7 @@ int send(uint8_t* data, int size, sockaddr_in* dstAddr = nullptr);
 
 ## isOpen method
 
-**isOpen()** method returns UDP socket open status. Method declaration:
+The **isOpen()** method returns UDP socket open status. Method declaration:
 
 ```cpp
 bool isOpen();
@@ -229,7 +193,7 @@ bool isOpen();
 
 ## close method
 
-close() method designed to close socket if it open. Method declaration:
+The **close()** method closes socket if it open. Method declaration:
 
 ```cpp
 void close();
@@ -239,7 +203,7 @@ void close();
 
 ## getIp method
 
-**getIp(...)** method designed to extract IP address from address structure. Method declaration:
+The **getIp(...)** method extracts IP address from address structure. Method declaration:
 
 ```cpp
 std::string getIp(sockaddr_in* srcAddr);
@@ -251,9 +215,11 @@ std::string getIp(sockaddr_in* srcAddr);
 
 **Returns:** IP string.
 
+
+
 ## getPort method
 
-**getPort(...)** method designed to extract UDP port from address structure. Method declaration:
+The **getPort(...)** method extracts UDP port from address structure. Method declaration:
 
 ```cpp
 int getPort(sockaddr_in* srcAddr);
@@ -282,49 +248,37 @@ Test application shows how to create socket only to send data. Test application 
 #include <thread>
 #include "UdpSocket.h"
 
-// Link namespaces.
 using namespace std;
 using namespace cr::clib;
 using namespace std::chrono;
 
-// Entry point.
 int main(void)
 {
     cout<< "Data sender v" << UdpSocket::getVersion() << endl << endl;
 
-    // Enter destination IP.
     string ip = "";
-    cout << "Enter destination IP: ";
+    cout << "Set destination IP: ";
     cin >> ip;
 
-    // Enter UDP port.
     int port = 0;
-    cout << "Enter UDP port: ";
+    cout << "Set UDP port: ";
     cin >> port;
 
-    // Enter sending data period ms.
     int cyclePeriodMsec = 0;
-    cout << "Enter sending data period msec: ";
+    cout << "Set sending data period msec: ";
     cin >> cyclePeriodMsec;
 
-    // Enter number of bytes.
     int numBytes = 0;
-    cout << "Enter num bytes to send [0-8192]: ";
+    cout << "Set num bytes to send [0-8192]: ";
     cin >> numBytes;
 
-    // Init UDP socket: clietn (only to send data), default destination IP.
+    // Open UDP socket: client mode (only to send data).
     UdpSocket udpSocket;
     if (!udpSocket.open(port, false, ip))
-    {
-        cout << "ERROR: Can't init UDP socket. Exit." << endl;
-        this_thread::sleep_for(seconds(1));
         return -1;
-    }
-
-    // Init variables.
-    uint8_t* data = new uint8_t[numBytes];
 
     // Main loop.
+    uint8_t* data = new uint8_t[numBytes];
     time_point<system_clock> startTime = system_clock::now();
     while (true)
     {
@@ -343,7 +297,6 @@ int main(void)
             this_thread::sleep_for(milliseconds(waitTime));
         startTime = system_clock::now();
     }
-
     return 1;
 }
 ```
@@ -352,7 +305,7 @@ int main(void)
 
 ## Data receiver
 
-Test application shows how to create socket to read and send. Test application receives and shows info about input data.
+Test application shows how to create socket to read and send. Test application receives and shows info about sender.
 
 ```cpp
 #include <iostream>
@@ -361,45 +314,34 @@ Test application shows how to create socket to read and send. Test application r
 #include <thread>
 #include "UdpSocket.h"
 
-// Link namespaces.
 using namespace std;
 using namespace cr::clib;
 using namespace std::chrono;
 
-// Entry point.
 int main(void)
 {
     cout<< "Data receiver v" << UdpSocket::getVersion() << endl << endl;
 
-    // Set UDP port.
     int port = 0;
-    cout << "Enter UDP port: ";
+    cout << "Set UDP port: ";
     cin >> port;
 
-    // Set wait data timeout.
     int timeoutMsec = 0;
-    cout << "Enter wait data timeout, msec: ";
+    cout << "Set wait data timeout, msec: ";
     cin >> timeoutMsec;
 
-    // Init UDP socket: server, default destination IP.
+    // Open UDP socket: server mode (to receive data).
     UdpSocket udpSocket;
     if (!udpSocket.open(port, true, "127.0.0.1", timeoutMsec))
-    {
-        cout << "ERROR: Can't init UDP socket. Exit." << endl;
-        this_thread::sleep_for(seconds(1));
         return -1;
-    }
-
-    // Init variables.
-    const int bufferSize = 1024;
-    uint8_t data[bufferSize];
 
     // Main loop.
+    uint8_t data[8192];
     while (true)
     {
         // Read data. Max wait time = timeoutMsec.
         struct sockaddr_in addr;
-        int bytes = udpSocket.read(data, bufferSize, &addr);
+        int bytes = udpSocket.read(data, 8192, &addr);
 
         // Check input data size.
         if (bytes <= 0)
@@ -408,10 +350,119 @@ int main(void)
             continue;
         }
 
-        // Show data about sender.
-        cout << bytes << " bytes read from " << udpSocket.getIp(&addr) << "/" <<
-                udpSocket.getPort(&addr) << endl;
+        // Show sender info.
+        cout << bytes << " bytes read from " <<
+        udpSocket.getIp(&addr) << "/" << udpSocket.getPort(&addr) << endl;
     }
 }
 ```
 
+
+
+# Build and connect to your project
+
+Typical commands to build **UdpSocket** library (on Linux OS):
+
+```bash
+git clone https://github.com/ConstantRobotics-Ltd/UdpSocket.git
+cd UdpSocket
+mkdir build
+cd build
+cmake ..
+make
+```
+
+If you want connect **UdpSocket** library to your CMake project as source code you can make follow. For example, if your repository has structure:
+
+```bash
+CMakeLists.txt
+src
+    CMakeList.txt
+    yourLib.h
+    yourLib.cpp
+```
+
+You can add repository **UdpSocket** as submodule by command (or just copy files):
+
+```bash
+cd <your repository folder>
+git submodule add https://github.com/ConstantRobotics-Ltd/UdpSocket.git 3rdparty/UdpSocket
+```
+
+In you repository folder will be created folder **3rdparty/UdpSocket** which contains files of **UdpSocket** repository. New structure of your repository:
+
+```bash
+CMakeLists.txt
+src
+    CMakeList.txt
+    yourLib.h
+    yourLib.cpp
+3rdparty
+    UdpSocket
+```
+
+Create CMakeLists.txt file in **3rdparty** folder. CMakeLists.txt should contain:
+
+```cmake
+cmake_minimum_required(VERSION 3.13)
+
+################################################################################
+## 3RD-PARTY
+## dependencies for the project
+################################################################################
+project(3rdparty LANGUAGES CXX)
+
+################################################################################
+## SETTINGS
+## basic 3rd-party settings before use
+################################################################################
+# To inherit the top-level architecture when the project is used as a submodule.
+SET(PARENT ${PARENT}_YOUR_PROJECT_3RDPARTY)
+# Disable self-overwriting of parameters inside included subdirectories.
+SET(${PARENT}_SUBMODULE_CACHE_OVERWRITE OFF CACHE BOOL "" FORCE)
+
+################################################################################
+## CONFIGURATION
+## 3rd-party submodules configuration
+################################################################################
+SET(${PARENT}_SUBMODULE_UDP_SOCKET                      ON  CACHE BOOL "" FORCE)
+if (${PARENT}_SUBMODULE_UDP_SOCKET)
+    SET(${PARENT}_UDP_SOCKET                            ON  CACHE BOOL "" FORCE)
+    SET(${PARENT}_UDP_SOCKET_EXAMPLES                   OFF CACHE BOOL "" FORCE)
+endif()
+
+################################################################################
+## INCLUDING SUBDIRECTORIES
+## Adding subdirectories according to the 3rd-party configuration
+################################################################################
+if (${PARENT}_SUBMODULE_UDP_SOCKET)
+    add_subdirectory(UdpSocket)
+endif()
+```
+
+File **3rdparty/CMakeLists.txt** adds folder **UdpSocket** to your project and excludes examples from compiling. Your repository new structure will be:
+
+```bash
+CMakeLists.txt
+src
+    CMakeList.txt
+    yourLib.h
+    yourLib.cpp
+3rdparty
+    CMakeLists.txt
+    UdpSocket
+```
+
+Next you need include folder 3rdparty in main **CMakeLists.txt** file of your repository. Add string at the end of your main **CMakeLists.txt**:
+
+```cmake
+add_subdirectory(3rdparty)
+```
+
+Next you have to include UdpSocket library in your **src/CMakeLists.txt** file:
+
+```cmake
+target_link_libraries(${PROJECT_NAME} UdpSocket)
+```
+
+Done!

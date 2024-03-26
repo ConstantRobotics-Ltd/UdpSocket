@@ -11,6 +11,7 @@
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #endif
+#include <atomic>
 #include <string>
 
 
@@ -28,7 +29,7 @@ public:
 
     /**
      * @brief Get current library version.
-     * @return String of current library version in format "X.Y.Z".
+     * @return String of current library version in format "Major.Minor.Patch".
      */
     static std::string getVersion();
 
@@ -103,7 +104,7 @@ public:
 private:
 
     // Socket open flag.
-    bool m_isOpen{false};
+    std::atomic<bool> m_isOpen{false};
     // Destination net address structure.
     struct sockaddr_in m_dstAddr{0};
     // Source net address structure.

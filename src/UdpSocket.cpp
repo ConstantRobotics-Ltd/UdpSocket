@@ -5,12 +5,10 @@
 
 
 
-// Link namespaces.
 using namespace cr::clib;
 
 
 
-/// Get library version.
 std::string UdpSocket::getVersion()
 {
     return UDP_SOCKET_VERSION;
@@ -18,17 +16,15 @@ std::string UdpSocket::getVersion()
 
 
 
-/// Class constructor.
 UdpSocket::UdpSocket()
 {
-    // Resed address structures.
+    // Reset address structures.
     memset(&m_dstAddr, 0, sizeof(sockaddr_in));
     memset(&m_srcAddr, 0, sizeof(sockaddr_in));
 }
 
 
 
-/// Class destructor.
 UdpSocket::~UdpSocket()
 {
     // Close socket.
@@ -37,7 +33,6 @@ UdpSocket::~UdpSocket()
 
 
 
-/// Open socket.
 bool UdpSocket::open(uint16_t port,
                      bool serverType,
                      std::string dstIp,
@@ -164,7 +159,6 @@ bool UdpSocket::open(uint16_t port,
 
 
 
-// Read data.
 int UdpSocket::read(uint8_t* data, int size, sockaddr_in* srcAddr)
 {
     // Check if socket not open.
@@ -191,7 +185,6 @@ int UdpSocket::read(uint8_t* data, int size, sockaddr_in* srcAddr)
 
 
 
-// Send data.
 int UdpSocket::send(uint8_t* data, int size, sockaddr_in* dstAddr)
 {
     // Check if socket not open.
@@ -209,7 +202,6 @@ int UdpSocket::send(uint8_t* data, int size, sockaddr_in* dstAddr)
 
 
 
-/// Close socket.
 void UdpSocket::close()
 {
     // Close socket
@@ -227,7 +219,6 @@ void UdpSocket::close()
 
 
 
-/// Check open status.
 bool UdpSocket::isOpen()
 {
     return m_isOpen;
@@ -235,7 +226,6 @@ bool UdpSocket::isOpen()
 
 
 
-/// Get IP of data source.
 std::string UdpSocket::getIp(sockaddr_in* srcAddr)
 {
     char str[INET_ADDRSTRLEN];
@@ -246,12 +236,7 @@ std::string UdpSocket::getIp(sockaddr_in* srcAddr)
 
 
 
-/// Get UDP port of data source.
 int UdpSocket::getPort(sockaddr_in* srcAddr)
 {
     return htons(srcAddr->sin_port);
 }
-
-
-
-

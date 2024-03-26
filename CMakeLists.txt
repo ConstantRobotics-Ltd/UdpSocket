@@ -41,6 +41,7 @@ SET(${PARENT}_UDP_SOCKET_EXAMPLES            ON  CACHE BOOL "" ${REWRITE_FORCE})
 if (${PARENT}_UDP_SOCKET)
     add_subdirectory(src)
 endif()
+
 if (${PARENT}_UDP_SOCKET_EXAMPLES)
     add_subdirectory(examples)
 endif()
