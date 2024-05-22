@@ -1,10 +1,10 @@
-![udp_socket_web_logo](_static/udp_socket_web_logo.png)
+![udp_socket_web_logo](./static/udp_socket_web_logo.png)
 
 
 
 # **UdpSocket C++ library**
 
-**v3.1.1**
+**v3.1.2**
 
 
 
@@ -47,6 +47,7 @@
 | 3.0.1   | 13.05.2023   | - Fixed send data to external address.                       |
 | 3.1.0   | 27.08.2023   | - License added.<br />- Repository made public.              |
 | 3.1.1   | 26.03.2024   | - Documentation updated.                                     |
+| 3.1.2   | 22.05.2024   | - Documentation updated.                                     |
 
 
 
@@ -119,7 +120,7 @@ std::cout << "UdpSocket version: " << cr::clib::UdpSocket::getVersion() << std::
 Console output:
 
 ```bash
-UdpSocket version: 3.1.1
+UdpSocket version: 3.1.2
 ```
 
 
