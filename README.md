@@ -4,7 +4,7 @@
 
 # **UdpSocket C++ library**
 
-**v3.1.2**
+**v3.1.3**
 
 
 
@@ -48,6 +48,7 @@
 | 3.1.0   | 27.08.2023   | - License added.<br />- Repository made public.              |
 | 3.1.1   | 26.03.2024   | - Documentation updated.                                     |
 | 3.1.2   | 22.05.2024   | - Documentation updated.                                     |
+| 3.1.3   | 17.07.2024   | - CMake updated.                                             |
 
 
 
@@ -60,6 +61,11 @@
 **UdpSocket** interface class declared in **UdpSocket.h** file. Class declaration:
 
 ```cpp
+namespace cr
+{
+namespace clib
+{
+/// UDP Socket class.
 class UdpSocket
 {
 public:
@@ -99,6 +105,8 @@ public:
     /// Get UDP port of data source.
     int getPort(sockaddr_in* srcAddr);
 };
+}
+}
 ```
 
 
@@ -114,13 +122,13 @@ static std::string getVersion();
 Method can be used without **UdpSocket** class instance:
 
 ```cpp
-std::cout << "UdpSocket version: " << cr::clib::UdpSocket::getVersion() << std::endl;
+std::cout << "UdpSocket v: " << cr::clib::UdpSocket::getVersion() << std::endl;
 ```
 
 Console output:
 
 ```bash
-UdpSocket version: 3.1.2
+UdpSocket v: 3.1.3
 ```
 
 
@@ -306,7 +314,7 @@ int main(void)
 
 ## Data receiver
 
-Test application shows how to create socket to read and send. Test application receives and shows info about sender.
+Test application shows how to create socket to read and send. Test application receives data and shows info about sender.
 
 ```cpp
 #include <iostream>
@@ -365,7 +373,6 @@ int main(void)
 Typical commands to build **UdpSocket** library (on Linux OS):
 
 ```bash
-git clone https://github.com/ConstantRobotics-Ltd/UdpSocket.git
 cd UdpSocket
 mkdir build
 cd build
@@ -383,14 +390,7 @@ src
     yourLib.cpp
 ```
 
-You can add repository **UdpSocket** as submodule by command (or just copy files):
-
-```bash
-cd <your repository folder>
-git submodule add https://github.com/ConstantRobotics-Ltd/UdpSocket.git 3rdparty/UdpSocket
-```
-
-In you repository folder will be created folder **3rdparty/UdpSocket** which contains files of **UdpSocket** repository. New structure of your repository:
+Create **3rdparty** folder in your repository and copy **UdpSocket** repository folder there. New structure of your repository:
 
 ```bash
 CMakeLists.txt
@@ -441,7 +441,7 @@ if (${PARENT}_SUBMODULE_UDP_SOCKET)
 endif()
 ```
 
-File **3rdparty/CMakeLists.txt** adds folder **UdpSocket** to your project and excludes examples from compiling. Your repository new structure will be:
+File **3rdparty/CMakeLists.txt** adds folder **UdpSocket** to your project and excludes examples from compiling (by default examples excluded from compiling if **UdpSocket** included as sub-repository). Your repository new structure will be:
 
 ```bash
 CMakeLists.txt
