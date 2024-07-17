@@ -1,10 +1,16 @@
+---
+layout: default
+title: UdpSocket
+nav_order: 5
+parent: Communication libraries
+---
 ![udp_socket_web_logo](./static/udp_socket_web_logo.png)
 
 
 
 # **UdpSocket C++ library**
 
-**v3.1.2**
+**v3.1.3**
 
 
 

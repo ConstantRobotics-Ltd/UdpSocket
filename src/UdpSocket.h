@@ -1,5 +1,6 @@
 #pragma once
-#include <iostream>
+#include <string>
+#include <cstdint>
 #if defined(linux) || defined(__linux) || defined(__linux__)
 #include <unistd.h>
 #include <sys/types.h>
